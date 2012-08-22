@@ -117,28 +117,21 @@ public class ExecutorServiceBean extends AbstractExecutorService implements Exec
    * and invoking the {@link #executeAsynchronously(Runnable)} method
    * on it, supplying it with the supplied {@link Runnable}.
    *
-   * <h2>Design Notes</h2>
-   *
-   * <p>This method is {@code synchronized} because according to
-   * section 4.5.8 of the EJB 3.1 specification access to an injected
-   * {@link SessionContext} object must be synchronized against
-   * concurrent access of any kind.  See <a
-   * href="http://java.net/projects/ejb-spec/lists/users/archive/2012-08/message/5">Marina
-   * Vatkina's explanation</a> for details.</p>
-   *
    * @param runnable the {@link Runnable} to execute; if {@code null}
    * no action is taken
    */
   @Override
-  public synchronized void execute(final Runnable runnable) {
+  public void execute(final Runnable runnable) {
     if (runnable != null) {
       final AsynchronousExecutor self;
-      if (this.sessionContext == null) {
-        self = this;
-      } else {
-        self = this.sessionContext.getBusinessObject(AsynchronousExecutor.class);
-        assert self != null;
+      synchronized (this) {
+        if (this.sessionContext == null) {
+          self = this;
+        } else {
+          self = this.sessionContext.getBusinessObject(AsynchronousExecutor.class);
+        }
       }
+      assert self != null;
       self.executeAsynchronously(runnable);
     }
   }
@@ -146,8 +139,34 @@ public class ExecutorServiceBean extends AbstractExecutorService implements Exec
   /**
    * An {@link Asynchronous} method that implements the {@link
    * AsynchronousExecutor} interface by executing the supplied {@link
-   * Runnable} according to the rules of the EJB 3.1 specification,
-   * section 4.5 and following.
+   * Runnable} according to the rules of the <a
+   * href="http://download.oracle.com/otndocs/jcp/ejb-3.1-fr-eval-oth-JSpec/">EJB
+   * 3.1 specification</a>, section 4.5 and following.
+   *
+   * <h2>Design Notes</h2>
+   *
+   * <p>This method (and its {@link AsynchronousExecutor defining
+   * interface}) exists only so that the {@link #execute(Runnable)}
+   * implementation has a way to dispatch to the container-supplied
+   * asynchronous machinery.</p>
+   *
+   * <p>The contract of {@link ExecutorService#execute(Runnable)} and
+   * this method are identical.  But we can't just declare {@link
+   * #execute(Runnable)} to be {@code @}{@link Asynchronous}, because
+   * the {@link AbstractExecutorService} implementation of (for
+   * example) {@link AbstractExecutorService#submit(Callable)
+   * submit(Callable)} calls it directly.  A direct call like that
+   * means that the container's proxy of the bean reference is not in
+   * play, and if the proxy is not in play, then the container has no
+   * way to make the call be an asynchronous one.</p>
+   *
+   * <p>So it follows that {@link #execute(Runnable)} needs some way
+   * to call through to <em>another</em> method that can be designated
+   * as {@code @}{@link Asynchronous}.  If it were possible to have
+   * such a method designated as {@code private}, I would have done
+   * so.  But a container proxy must call method implementations
+   * through a ({@code public}) business interface, so a "dummy"
+   * business interface is needed here.</p>
    *
    * @param runnable the {@link Runnable} to execute; if {@code null}
    * then no action is taken
