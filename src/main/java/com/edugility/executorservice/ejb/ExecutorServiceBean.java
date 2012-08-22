@@ -117,19 +117,29 @@ public class ExecutorServiceBean extends AbstractExecutorService implements Exec
    * and invoking the {@link #executeAsynchronously(Runnable)} method
    * on it, supplying it with the supplied {@link Runnable}.
    *
+   * <h2>Design Notes</h2>
+   *
+   * <p>This method is {@code synchronized} because according to
+   * section 4.5.8 of the EJB 3.1 specification access to an injected
+   * {@link SessionContext} object must be synchronized against
+   * concurrent access of any kind.  See <a
+   * href="http://java.net/projects/ejb-spec/lists/users/archive/2012-08/message/5">Marina
+   * Vatkina's explanation</a> for details.</p>
+   *
    * @param runnable the {@link Runnable} to execute; if {@code null}
    * no action is taken
    */
   @Override
-  public void execute(final Runnable runnable) {
+  public synchronized void execute(final Runnable runnable) {
     if (runnable != null) {
-      if (this.sessionContext != null) {
-        final AsynchronousExecutor self = this.sessionContext.getBusinessObject(AsynchronousExecutor.class);
-        assert self != null;
-        self.executeAsynchronously(runnable);
+      final AsynchronousExecutor self;
+      if (this.sessionContext == null) {
+        self = this;
       } else {
-        runnable.run();
+        self = this.sessionContext.getBusinessObject(AsynchronousExecutor.class);
+        assert self != null;
       }
+      self.executeAsynchronously(runnable);
     }
   }
 

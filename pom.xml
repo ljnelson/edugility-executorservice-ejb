@@ -285,13 +285,14 @@
   <properties>
 
     <!-- Versions -->
+    <javaNCSSMavenPluginVersion>2.0</javaNCSSMavenPluginVersion>
     <javaxAnnotationVersion>3.1.2</javaxAnnotationVersion>
     <javaxEjbVersion>3.1.2</javaxEjbVersion>
     <junitVersion>4.10</junitVersion>
     <mavenAssemblyPluginVersion>2.3</mavenAssemblyPluginVersion>
     <mavenCleanPluginVersion>2.4.1</mavenCleanPluginVersion>
     <mavenCompilerPluginVersion>2.5.1</mavenCompilerPluginVersion>
-    <mavenDependencyPluginVersion>2.4</mavenDependencyPluginVersion>
+    <mavenDependencyPluginVersion>2.5</mavenDependencyPluginVersion>
     <mavenDeployPluginVersion>2.7</mavenDeployPluginVersion>
     <mavenEjbPluginVersion>2.3</mavenEjbPluginVersion>
     <mavenEnforcerPluginVersion>1.1.1</mavenEnforcerPluginVersion>
