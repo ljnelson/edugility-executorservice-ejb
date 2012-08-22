@@ -38,6 +38,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 
@@ -95,6 +99,12 @@ import javax.ejb.Singleton;
 public class ExecutorServiceBean extends AbstractExecutorService implements ExecutorService, AsynchronousExecutor {
 
   /**
+   * The {@link Logger} for this {@link ExecutorServiceBean} instance.
+   * This field may be {@code null}.
+   */
+  protected Logger logger;
+
+  /**
    * A {@link SessionContext} injected by the EJB container.  If this
    * field is {@code null}, then this {@link ExecutorServiceBean} is
    * being used in a non-compliant EJB 3.1 container, or is not being
@@ -108,6 +118,7 @@ public class ExecutorServiceBean extends AbstractExecutorService implements Exec
    */
   public ExecutorServiceBean() {
     super();
+    this.logger = Logger.getLogger(this.getClass().getName());
   }
 
   /**
@@ -122,6 +133,9 @@ public class ExecutorServiceBean extends AbstractExecutorService implements Exec
    */
   @Override
   public void execute(final Runnable runnable) {
+    if (this.logger != null && this.logger.isLoggable(Level.FINER)) {
+      this.logger.entering(this.getClass().getName(), "execute", runnable);
+    }
     if (runnable != null) {
       final AsynchronousExecutor self;
       synchronized (this) {
@@ -133,6 +147,9 @@ public class ExecutorServiceBean extends AbstractExecutorService implements Exec
       }
       assert self != null;
       self.executeAsynchronously(runnable);
+    }
+    if (this.logger != null && this.logger.isLoggable(Level.FINER)) {
+      this.logger.exiting(this.getClass().getName(), "execute");
     }
   }
 
@@ -174,8 +191,14 @@ public class ExecutorServiceBean extends AbstractExecutorService implements Exec
   @Asynchronous
   @Override
   public void executeAsynchronously(final Runnable runnable) {
+    if (this.logger != null && this.logger.isLoggable(Level.FINER)) {
+      this.logger.entering(this.getClass().getName(), "executeAsynchronously", runnable);
+    }
     if (runnable != null) {
       runnable.run();
+    }
+    if (this.logger != null && this.logger.isLoggable(Level.FINER)) {
+      this.logger.exiting(this.getClass().getName(), "executeAsynchronously");
     }
   }
 
